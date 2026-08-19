@@ -127,23 +127,41 @@ Trial_RFD.png summarizes the primary reporting checkpoint (80 ms) across trials 
 ### Output folder structure
 
 ADAPT_BK/
+
 └── Subject/
+
     └── Session/
+    
         └── Block/
+        
             └── TaskVersion/
+            
                 ├── game_output_....xlsx
+                
                 ├── game_output_....mat
+                
                 ├── Trial_RFD.png
+                
                 ├── Onset_Aligned_Forces.png
+                
                 ├── SingleTrials/
+                
                 │   └── trial_001_....png
+                
                 └── Summary/
+                
                     ├── Mean_RFD_Profile.png
+                    
                     ├── RFD_Spaghetti.png
+                    
                     ├── RFD_Heatmap.png
+                    
                     ├── Trigger_Map.png
+                    
                     ├── Threshold_Evolution.png
+                    
                     └── Force / combined summary figures
+                    
 
 
 
