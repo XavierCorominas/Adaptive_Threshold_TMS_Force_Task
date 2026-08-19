@@ -13,7 +13,7 @@ A Python-based force-production task for delivering adaptive, movement-locked TM
 
 •	Movement onset — Force is smoothed over 3 samples. Onset is detected when force reaches 0.05 MVC and remains there for 5 consecutive samples.
 
-•	Real-time monitoring — Adaptive checking starts 20 ms after detected onset and repeats every 6 ms. At each checkpoint, local RFD is calculated from a linear regression over the preceding 20 ms of smoothed force.
+•	Real-time monitoring — Adaptive checking begins 20 ms after detected movement onset and is repeated every 6 ms. At each checkpoint, local RFD is estimated by linear regression over the preceding 20 ms of smoothed force. Because the checkpoint interval (6 ms) is shorter than the RFD window (20 ms), consecutive windows overlap by 14 ms, or 70%. This provides frequent, near-continuous monitoring of the rapidly changing early force trajectory while each RFD estimate still uses a substantially longer 20-ms window rather than relying on only a few highly noise-sensitive samples.
 
 •	Adaptive decision — Current RFD and/or force are compared with checkpoint-specific references from the previous 3 profiles. The operator can select BELOW or ABOVE behavior, and RFD_ONLY, FORCE_ONLY, or COMBINED decision logic. COMBINED logic is recommended to avoid false positives.
 
