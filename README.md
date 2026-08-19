@@ -15,7 +15,7 @@ A Python-based force-production task for delivering adaptive, movement-locked TM
 
 •	Real-time monitoring — Adaptive checking starts 20 ms after detected onset and repeats every 6 ms. At each checkpoint, local RFD is calculated from a linear regression over the preceding 20 ms of smoothed force.
 
-•	Adaptive decision — Current RFD and/or force are compared with checkpoint-specific references from the previous 3 profiles. The operator can select BELOW or ABOVE behavior, and RFD_ONLY, FORCE_ONLY, or COMBINED decision logic.
+•	Adaptive decision — Current RFD and/or force are compared with checkpoint-specific references from the previous 3 profiles. The operator can select BELOW or ABOVE behavior, and RFD_ONLY, FORCE_ONLY, or COMBINED decision logic. COMBINED logic is recommended to avoid false positives.
 
 •	Trigger — The first eligible checkpoint satisfying the selected rule sends the stimulation trigger. The individualized checking window is capped at 180 ms after onset.
 
