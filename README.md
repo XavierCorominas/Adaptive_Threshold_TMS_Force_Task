@@ -8,11 +8,17 @@ A Python-based force-production task for delivering adaptive, movement-locked TM
 *How the task works*
 
 •	Force calibration — The input device is calibrated to the participant so force is represented relative to maximum voluntary contraction (MVC).
+
 •	Baseline — Ten no-stimulation baseline trials establish the initial RFD and force profiles and help individualize the useful early stimulation window.
+
 •	Movement onset — Force is smoothed over 3 samples. Onset is detected when force reaches 0.05 MVC and remains there for 5 consecutive samples.
+
 •	Real-time monitoring — Adaptive checking starts 20 ms after detected onset and repeats every 6 ms. At each checkpoint, local RFD is calculated from a linear regression over the preceding 20 ms of smoothed force.
+
 •	Adaptive decision — Current RFD and/or force are compared with checkpoint-specific references from the previous 3 profiles. The operator can select BELOW or ABOVE behavior and RFD_ONLY, FORCE_ONLY, or COMBINED decision logic.
+
 •	Trigger — The first eligible checkpoint satisfying the selected rule sends the stimulation trigger. The individualized checking window is capped at 180 ms after onset.
+
  <img width="1005" height="447" alt="image" src="https://github.com/user-attachments/assets/09be02ba-f254-4751-832d-04c5dc37b1d7" />
 
 *Adaptive threshold*
