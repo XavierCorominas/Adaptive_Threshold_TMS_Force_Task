@@ -62,9 +62,10 @@ Short guide to the files, metrics, and plots generated after each block
 After a Main Task block, the program performs post-hoc processing and saves the results inside a participant/session/block/task-version folder. The main outputs are an Excel workbook, a MATLAB .mat file, individual-trial PNG figures, and session-level summary PNG figures. The task also prints a short block summary to the console, including achieved sampling rate, trigger count, mean 80-ms RFD, reaction time, onset failures, target accuracy, time in target, and mean force error.
 
 ## Excel workbook
+
 The Excel workbook is the most convenient output for inspecting and analysing the experiment. It separates the data into several worksheets:
 
-Sheet	What it contains
+### Sheet	What it contains
 
 Trial_Summary	One row per trial. Contains trial-level RFD, reaction time, onset status, checkpoint RFD/force values, adaptive references/thresholds, trigger information and target-performance metrics.
 
@@ -78,21 +79,27 @@ Baseline_Plateau	Time-to-plateau for each baseline trial, used to determine the 
 Raw_Data	Continuous recorded time and right-handle force for the block.
 
 ### MATLAB output
+
 A matching .mat file is saved for MATLAB-based analysis. It contains the raw force/time arrays, calibration values, baseline profiles, adaptive checkpoint settings, task configuration, and trial-level result columns. This provides a direct route for custom signal processing or statistical analysis outside Python.
 
 ### Individual trial figures
+
 A separate publication-style PNG is generated for every completed trial in the SingleTrials folder. Each figure contains a force panel and a local-RFD panel on a common GO-aligned time axis.
 
 ### Force panel
+
 The force panel shows the raw/light force trace together with the smoothed force trajectory. It marks the GO cue, the 0.05-MVC onset threshold, and—when using BELOW mode—the force ceiling above which corrective stimulation is suppressed. Adaptive force references and stimulation timing are also displayed when available.
 
 ### RFD panel
+
 The RFD panel shows the continuous 20-ms sliding local-RFD trace across the recorded epoch, while visually distinguishing the shorter interval in which adaptive stimulation was actually allowed. Checkpoint RFD values and the adaptive trigger threshold are overlaid. If stimulation occurred, its timing is marked. A text summary reports reaction time, the primary (arbitrary time reference normally in the middle of the force curve) 80-ms RFD, whether stimulation occurred, and the trigger checkpoint.
 
 ### Main session-level figures
+
 The Summary folder provides plots for understanding behavior across the whole block rather than inspecting trials individually.
 
 ## Figure	Interpretation
+
 Mean_RFD_Profile.png	Mean local RFD across checkpoints, ±1 SD, together with the mean adaptive trigger threshold. Shows the typical early RFD profile for the session.
 
 RFD_Spaghetti.png	Plots every trial's checkpoint RFD trajectory, plus the session mean, variability and threshold. Useful for seeing trial-to-trial variability.
@@ -107,9 +114,11 @@ Force summary figures	Equivalent session summaries are generated for checkpoint 
 Combined RFD–Force figures	Additional plots jointly visualize RFD and force, allowing the two components of COMBINED triggering to be interpreted together.
 
 ### Additional overview figures
+
 Trial_RFD.png summarizes the primary reporting checkpoint (80 ms) across trials together with its adaptive reference. Onset_Aligned_Forces.png overlays all smoothed force traces after shifting each trial so detected movement onset is t = 0. This is useful for evaluating the consistency of the force rise independently of reaction-time differences.
 
 ### How to interpret the outputs
+
 •	Use Trial_Summary for trial-level statistics and determining exactly why/when stimulation occurred.
 
 •	Use Trial_TimeSeries when the full shape of an individual force or RFD trace is required.
