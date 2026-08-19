@@ -2,7 +2,7 @@
 
 ## *Short repository overview*
 
-A Python-based force-production task for delivering adaptive, movement-locked TMS stimulation based on real-time force development. The task records right-hand force at 500 Hz, detects movement onset, and compares the developing contraction with specific references derived from baseline and recent trials.
+A Python-based force-production task for delivering adaptive, movement-locked TMS stimulation based on real-time force development. The task records grip-hand force at 500 Hz, detects movement onset, and compares the developing force contraction, force rate development or both with specific time-references derived from baseline and recent trials.
  <img width="1020" height="279" alt="image" src="https://github.com/user-attachments/assets/d3b70ec3-835e-47f4-be1c-00a0e674ef6f" />
 
 ## *How the task works*
