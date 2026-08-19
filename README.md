@@ -28,20 +28,31 @@ The adaptive reference is calculated independently at each checkpoint. V6 uses a
 
 *Key values*
 
-Parameter	V6 value
 Sampling rate	500 Hz
+
 Smoothing	3 samples (~6 ms)
+
 Onset threshold	0.05 MVC
+
 Onset confirmation	5 samples (~10 ms)
+
 Local RFD window	20 ms
+
 First checkpoint	20 ms after onset
+
 Checkpoint spacing	6 ms
+
 Adaptive history	Previous 3 profiles
+
 RFD / force margin	±10%
+
 Baseline trials	10
+
 Maximum checking window	180 ms after onset
+
 Why movement-onset locking?
 The adaptive clock starts from detected force onset rather than from the visual GO cue. This prevents reaction-time variability from shifting the RFD measurement window and allows equivalent phases of force development to be compared across trials.
+
 Main Python dependencies
 NumPy • Pandas • SciPy • Pygame • Matplotlib • NI-DAQmx (optional for hardware triggering)
 NI-DAQmx is optional, allowing the task and adaptive logic to be tested without the DAQ hardware connected.
