@@ -1,4 +1,4 @@
-#**Adaptive Thresholding TMS Force Task**
+# **Adaptive Thresholding TMS Force Task**
 
 ##*Short repository overview*
 
