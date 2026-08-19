@@ -52,7 +52,10 @@ The adaptive clock starts from detected force onset rather than from the visual 
 ## *Main Python dependencies*
 NumPy • Pandas • SciPy • Pygame • Matplotlib • NI-DAQmx (optional for hardware triggering)
 
-
+ .
+ .
+ .
+ .
 
 
 
