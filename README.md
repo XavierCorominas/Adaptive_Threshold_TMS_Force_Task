@@ -53,9 +53,13 @@ The adaptive clock starts from detected force onset rather than from the visual 
 NumPy • Pandas • SciPy • Pygame • Matplotlib • NI-DAQmx (optional for hardware triggering)
 
  .
+ 
  .
+ 
  .
+ 
  .
+ 
 
 
 
