@@ -1,4 +1,4 @@
-# **Adaptive Thresholding TMS Force Task**
+# **Adaptive Thresholding TMS Grip-Force Task**
 
 ## *Short repository overview*
 
