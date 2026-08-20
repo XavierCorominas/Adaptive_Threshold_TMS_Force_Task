@@ -2,187 +2,783 @@
 
 ## *Short repository overview*
 
-A Python-based force-production task for delivering adaptive, movement-locked TMS stimulation based on real-time force development. The task records grip-hand force at 500 Hz, detects movement onset, and compares the developing force contraction, force rate development or both with specific time-references derived from baseline and recent trials.
- <img width="1020" height="279" alt="image" src="https://github.com/user-attachments/assets/d3b70ec3-835e-47f4-be1c-00a0e674ef6f" />
+A Python-based ballistic grip-force task for delivering adaptive, movement-locked TMS stimulation based on real-time force development.
 
-## *How the task works*
+The task records right-hand grip force at **500 Hz**, detects movement onset, and compares the participant's developing contraction with adaptive references derived from baseline and recent trials.
 
-•	Force calibration — The input device is calibrated to the participant so force is represented relative to maximum voluntary contraction (MVC).
+Two alternative RFD triggering algorithms are available:
 
-•	Baseline — Ten no-stimulation baseline trials establish the initial RFD and force profiles and help individualize the useful early stimulation window.
+1. **Sliding RFD** — repeated local RFD evaluations at onset-relative checkpoints.
+2. **Adaptive Fixed Early Slope** — one onset-anchored linear slope fitted over an individualized portion of the ballistic force rise.
 
-•	Movement onset — Force is smoothed over 3 samples. Onset is detected when force reaches 0.05 MVC and remains there for 5 consecutive samples.
+For either algorithm, stimulation can be based on **RFD**, **force**, or a **combination of both**.
 
-•	Real-time monitoring — Adaptive checking begins 20 ms after detected movement onset and is repeated every 6 ms. At each checkpoint, local RFD is estimated by linear regression over the preceding 20 ms of smoothed force. Because the checkpoint interval (6 ms) is shorter than the RFD window (20 ms), consecutive windows overlap by 14 ms, or 70%. This provides frequent, near-continuous monitoring of the rapidly changing early force trajectory while each RFD estimate still uses a substantially longer 20-ms window rather than relying on only a few highly noise-sensitive samples.
+<img width="1020" height="279" alt="image" src="https://github.com/user-attachments/assets/d3b70ec3-835e-47f4-be1c-00a0e674ef6f" />
 
-•	Adaptive decision — Current RFD and/or force are compared with checkpoint-specific references from the previous 3 profiles. The operator can select BELOW or ABOVE behavior, and RFD_ONLY, FORCE_ONLY, or COMBINED decision logic. COMBINED logic is recommended to avoid false positives.
+---
 
-•	Trigger — The first eligible checkpoint satisfying the selected rule sends the stimulation trigger. The individualized checking window is capped at 180 ms after onset.
+# **How the task works**
 
- <img width="1005" height="447" alt="image" src="https://github.com/user-attachments/assets/09be02ba-f254-4751-832d-04c5dc37b1d7" />
+### Force calibration
 
-## *Adaptive threshold*
+The input device is calibrated to each participant so force is represented relative to maximum voluntary contraction (**MVC**).
 
-The adaptive reference is calculated independently at each checkpoint. V6 uses a 10% margin around that reference: in BELOW mode, current RFD must fall below 90% of the reference; in ABOVE mode, it must exceed 110%. Force uses the same 10% relative margin. COMBINED mode requires both RFD and force criteria to pass at the same checkpoint.
- <img width="975" height="390" alt="image" src="https://github.com/user-attachments/assets/f0653c4e-e2a8-49b3-a3be-968f311d2ab7" />
+The program first measures the actual resting position of the grip device and then determines the participant's maximum force deflection.
 
-## *Key values*
+Force during the experiment is therefore expressed as a fraction of calibrated MVC.
 
-Sampling rate	500 Hz
+---
 
-Smoothing	3 samples (~6 ms)
+### Familiarization
 
-Onset threshold	0.05% MVC
+An optional familiarization phase allows participants to practice the ballistic grip contraction before baseline acquisition.
 
-Local RFD window	20 ms
+Familiarization trials are not used to calculate adaptive thresholds.
 
-First RFD checkpoint	20 ms after onset
+The number of familiarization trials can be configured from the startup GUI.
 
-Checkpoint spacing	6 ms
+---
 
-Adaptive history	Previous 3 trials
+### Baseline
 
-RFD / force trigger margin	±10%
+Baseline consists of no-stimulation trials used to initialize the adaptive algorithms.
 
-Maximum checking window	180 ms after onset
+The number of baseline trials is configurable from the GUI.
 
-## *Why movement-onset locking?*
-The adaptive clock starts from detected force onset rather than from the visual GO cue. This prevents reaction-time variability from shifting the RFD measurement window and allows equivalent phases of force development to be compared across trials.
+For every baseline contraction, the task:
 
-## *Main Python dependencies*
-NumPy • Pandas • SciPy • Pygame • Matplotlib • NI-DAQmx (optional for hardware triggering)
+- detects movement onset;
+- identifies the ballistic force peak;
+- calculates onset-to-peak latency;
+- calculates early force-development slopes;
+- extracts checkpoint RFD and force values;
+- stores the force trajectory for subsequent adaptive calculations.
 
- .
- 
- .
- 
- .
- 
- .
- 
+Baseline trials can additionally be reviewed before the final calibration is accepted.
 
+Two review modes are available:
 
+**QC auto-save**
 
-## *Output Results and Figures*
+All automatically valid baseline trials are retained and a baseline QC report is saved.
 
-Short guide to the files, metrics, and plots generated after each block
+**QC interactive**
 
-### What the task produces
+Each baseline trial is displayed individually and the experimenter can manually **include or reject** it before the final baseline metrics are calculated.
 
-After a Main Task block, the program performs post-hoc processing and saves the results inside a participant/session/block/task-version folder. The main outputs are an Excel workbook, a MATLAB .mat file, individual-trial PNG figures, and session-level summary PNG figures. The task also prints a short block summary to the console, including achieved sampling rate, trigger count, mean 80-ms RFD, reaction time, onset failures, target accuracy, time in target, and mean force error.
+The baseline review plots use a fixed **0–1 MVC force axis**, allowing trials to be compared directly.
 
-## Excel workbook
+---
 
-The Excel workbook is the most convenient output for inspecting and analysing the experiment. It separates the data into several worksheets:
+# **Movement onset**
 
-### Sheet	What it contains
+All adaptive measurements are aligned to detected **force onset**, not to the visual GO cue.
 
-Trial_Summary	One row per trial. Contains trial-level RFD, reaction time, onset status, checkpoint RFD/force values, adaptive references/thresholds, trigger information and target-performance metrics.
+Force is smoothed over **3 samples**.
 
-Trial_TimeSeries	Sample-by-sample trial data, including force and smoothed force, time relative to GO/onset, and the local-RFD trace used for detailed visualization.
+Movement onset is accepted when force reaches:
 
-Calibration	Calibration values and key task settings, including resting baseline, maximum deflection, target force, RFD window, trigger mode and individualized checking endpoint.
+**0.05 MVC**
 
-Baseline_Thresholds	Baseline RFD threshold and force reference at each adaptive checkpoint.
+and remains at or above that level for:
 
-Baseline_Plateau	Time-to-plateau for each baseline trial, used to determine the individualized adaptive checking window.
-Raw_Data	Continuous recorded time and right-handle force for the block.
+**5 consecutive samples**.
 
-### MATLAB output
+Once detected, movement onset becomes:
 
-A matching .mat file is saved for MATLAB-based analysis. It contains the raw force/time arrays, calibration values, baseline profiles, adaptive checkpoint settings, task configuration, and trial-level result columns. This provides a direct route for custom signal processing or statistical analysis outside Python.
+**t = 0**
 
-### Individual trial figures
+for the adaptive force-development analysis.
 
-A separate publication-style PNG is generated for every completed trial in the SingleTrials folder. Each figure contains a force panel and a local-RFD panel on a common GO-aligned time axis.
+This prevents reaction-time variability from shifting the RFD measurement window.
 
-### Force panel
+---
 
-The force panel shows the raw/light force trace together with the smoothed force trajectory. It marks the GO cue, the 0.05-MVC onset threshold, and—when using BELOW mode—the force ceiling above which corrective stimulation is suppressed. Adaptive force references and stimulation timing are also displayed when available.
+# **Ballistic peak detection**
 
-### RFD panel
+The task is designed for a **ballistic squeeze-and-release contraction**. Participants rapidly increase grip force and then release rather than maintaining a prolonged force plateau.
 
-The RFD panel shows the continuous 20-ms sliding local-RFD trace across the recorded epoch, while visually distinguishing the shorter interval in which adaptive stimulation was actually allowed. Checkpoint RFD values and the adaptive trigger threshold are overlaid. If stimulation occurred, its timing is marked. A text summary reports reaction time, the primary (arbitrary time reference normally in the middle of the force curve) 80-ms RFD, whether stimulation occurred, and the trigger checkpoint.
+For this reason, V7 does **not** use a sustained force plateau as the main timing endpoint.
 
-### Main session-level figures
+Instead, the program estimates the **ballistic force peak**.
 
-The Summary folder provides plots for understanding behavior across the whole block rather than inspecting trials individually.
+After movement onset, the program searches the early force trajectory and examines the smoothed force-rate signal.
 
-## Figure	Interpretation
+A candidate peak is identified when:
 
-Mean_RFD_Profile.png	Mean local RFD across checkpoints, ±1 SD, together with the mean adaptive trigger threshold. Shows the typical early RFD profile for the session.
+- force has reached a substantial proportion of the trial peak;
+- force rate is positive before the candidate;
+- force rate becomes non-positive after the candidate.
 
-RFD_Spaghetti.png	Plots every trial's checkpoint RFD trajectory, plus the session mean, variability and threshold. Useful for seeing trial-to-trial variability.
+In other words, the algorithm detects the point where the force trajectory changes from:
 
-RFD_Heatmap.png	Trials × checkpoints heatmap of local RFD. Trigger checkpoints are marked with stars, making temporal patterns easy to identify.
+**rising → falling**
 
-Trigger_Map.png	Shows which trials triggered and the onset-relative checkpoint at which stimulation occurred.
-Threshold_Evolution.png	Shows how the adaptive RFD trigger threshold at each checkpoint changes across trials as the rolling reference is updated.
+which corresponds to the ballistic force maximum.
 
-Force summary figures	Equivalent session summaries are generated for checkpoint force: mean profile, individual trajectories, heatmap and force-reference evolution.
+The search is limited to the early post-onset interval.
 
-Combined RFD–Force figures	Additional plots jointly visualize RFD and force, allowing the two components of COMBINED triggering to be interpreted together.
+If a robust direction change cannot be identified, the maximum force within the ballistic search window is used as a fallback.
 
-### Additional overview figures
+The resulting:
 
-Trial_RFD.png summarizes the primary reporting checkpoint (80 ms) across trials together with its adaptive reference. Onset_Aligned_Forces.png overlays all smoothed force traces after shifting each trial so detected movement onset is t = 0. This is useful for evaluating the consistency of the force rise independently of reaction-time differences.
+**onset → peak latency**
 
-### How to interpret the outputs
+is used to individualize adaptive timing.
 
-•	Use Trial_Summary for trial-level statistics and determining exactly why/when stimulation occurred.
+---
 
-•	Use Trial_TimeSeries when the full shape of an individual force or RFD trace is required.
+# **Two real-time RFD algorithms**
 
-•	Use the SingleTrials figures for quality control: onset detection, force trajectory, RFD behavior, threshold crossing and stimulation timing can be inspected visually.
+The operator can select between two different adaptive RFD algorithms from the startup GUI.
 
-•	Use Mean_RFD_Profile and RFD_Spaghetti to understand the overall RFD behavior of the participant.
+## **1. Sliding RFD**
 
-•	Use RFD_Heatmap and Trigger_Map to identify where stimulation tends to occur across trials and onset-relative time.
+The Sliding RFD algorithm performs repeated evaluations during the early force rise.
 
-•	Use Threshold_Evolution to verify that the adaptive reference changes appropriately as new trials enter the rolling history.
+Adaptive checking begins:
 
-•	Use the force and combined summaries when interpreting COMBINED stimulation, because an RFD threshold crossing alone does not necessarily imply that the full trigger criterion was satisfied.
+**20 ms after detected movement onset**
 
-### Output folder structure
+and repeats every:
+
+**6 ms**.
+
+At every checkpoint, local RFD is estimated using a linear regression over the preceding:
+
+**20 ms**
+
+of smoothed force.
+
+Because checkpoints are separated by 6 ms while the RFD window is 20 ms, consecutive windows overlap substantially.
+
+This provides near-continuous monitoring of the rapidly developing force trajectory while avoiding slopes calculated from only a few highly noise-sensitive samples.
+
+The baseline onset-to-peak estimate is also used to individualize how long sliding checking is allowed to continue.
+
+The checking period is capped at:
+
+**180 ms after movement onset**.
+
+---
+
+## **2. Adaptive Fixed Early Slope**
+
+The Fixed Early Slope algorithm uses a fundamentally different strategy.
+
+Instead of repeatedly calculating local RFD at many checkpoints, the task fits **one linear regression from movement onset to an adaptive early-ramp endpoint**.
+
+The endpoint is determined from the participant's predicted onset-to-peak latency.
+
+The operator can select one of three timing modes:
+
+### FIT 1/4
+
+Slope is fitted from onset to:
+
+**25% of predicted onset-to-peak latency**
+
+### FIT 2/4
+
+Slope is fitted from onset to:
+
+**50% of predicted onset-to-peak latency**
+
+### FIT 3/4
+
+Slope is fitted from onset to:
+
+**75% of predicted onset-to-peak latency**
+
+For example, if predicted onset-to-peak latency is:
+
+**60 ms**
+
+then:
+
+- FIT 1/4 → slope window = **0–15 ms**
+- FIT 2/4 → slope window = **0–30 ms**
+- FIT 3/4 → slope window = **0–45 ms**
+
+The stimulation decision is made after this slope has been calculated.
+
+TMS is scheduled at:
+
+**slope-fit endpoint + configurable delay**
+
+The default delay is:
+
+**5 ms**
+
+but this value can be changed from the startup GUI.
+
+Therefore, with a 60-ms predicted peak:
+
+**FIT 2/4**
+
+0–30 ms slope fit  
+→ TMS approximately **35 ms after onset**
+
+and:
+
+**FIT 3/4**
+
+0–45 ms slope fit  
+→ TMS approximately **50 ms after onset**
+
+with the default 5-ms delay.
+
+Importantly, stimulation is **not delayed until the next quarter boundary**.
+
+---
+
+# **Adaptive Fixed-window timing across trials**
+
+The Fixed Early Slope window is adaptive.
+
+During baseline, the mean valid:
+
+**movement onset → ballistic peak latency**
+
+is calculated.
+
+The initial Main Task slope window is then:
+
+**mean baseline onset-to-peak latency × selected fraction**
+
+For example:
+
+mean baseline peak latency = 60 ms
+
+FIT 3/4 selected
+
+→ initial slope window = **45 ms**
+
+During the Main Task, the predicted peak latency is updated using the most recent valid trials.
+
+By default, the most recent:
+
+**3 trials**
+
+are used.
+
+Therefore, if the participant's ballistic rise becomes faster or slower, the slope window also changes.
+
+The slope reference from previous trials is recomputed using the **same current adaptive window**.
+
+This ensures that the current trial and previous trials are always compared using equivalent onset-relative slope intervals.
+
+---
+
+# **Adaptive threshold**
+
+The adaptive reference is based on recent completed trials.
+
+By default:
+
+**Previous 3 trials**
+
+are used.
+
+A **10% relative margin** is applied around the adaptive reference.
+
+For RFD or Fixed Early Slope:
+
+### BELOW
+
+Current value must be:
+
+**< 90% of adaptive reference**
+
+### ABOVE
+
+Current value must be:
+
+**> 110% of adaptive reference**
+
+Force uses the same **10% relative margin**.
+
+---
+
+# **Stimulation metric modes**
+
+Three stimulation modes are available from the GUI.
+
+### RFD ONLY
+
+The RFD criterion alone determines whether stimulation occurs.
+
+Depending on the selected RFD algorithm, this means either:
+
+- Sliding local RFD, or
+- Adaptive Fixed Early Slope.
+
+### FORCE ONLY
+
+The force trajectory relative to the adaptive force reference determines stimulation.
+
+### COMBINED
+
+Both the RFD and force criteria must be satisfied.
+
+In Sliding mode, RFD and force are evaluated at the same checkpoint.
+
+In Fixed Early Slope mode, the slope is calculated over the adaptive onset-to-fit window and force is evaluated at the corresponding adaptive endpoint.
+
+COMBINED mode can therefore help prevent stimulation based on an RFD difference that is not accompanied by a corresponding difference in the participant's force trajectory.
+
+<img width="975" height="390" alt="image" src="https://github.com/user-attachments/assets/f0653c4e-e2a8-49b3-a3be-968f311d2ab7" />
+
+---
+
+# **Trigger timing**
+
+Only **one adaptive stimulation trigger** can be delivered during a trial.
+
+### Sliding RFD
+
+The first eligible checkpoint satisfying the selected criterion produces the stimulation trigger.
+
+### Fixed Early Slope
+
+Only one adaptive decision is made.
+
+The task waits until:
+
+**adaptive slope endpoint + configured TMS delay**
+
+and then evaluates the adaptive criterion.
+
+If the criterion is satisfied, stimulation is delivered.
+
+If the criterion is not satisfied, no later Sliding-style checks are performed for that Fixed trial.
+
+---
+
+# **Target display**
+
+The target is defined directly in MVC units.
+
+Both its:
+
+- vertical force position;
+- vertical tolerance / box height
+
+can be configured from the startup GUI.
+
+The default target is:
+
+**0.85 MVC ± 0.10 MVC**
+
+The target box remains visible during the normal trial sequence.
+
+### With red cue enabled
+
+**Grey → Red → Green → Grey**
+
+### Without red cue
+
+**Grey → Green → Grey**
+
+The green target indicates the GO period.
+
+The force cursor and target use the same MVC-based vertical scale.
+
+---
+
+# **Participant performance feedback**
+
+Optional real-time participant feedback can be enabled from the GUI.
+
+When enabled, part of the right side of the participant screen is reserved for a trial-history plot.
+
+A new point is added after each completed trial.
+
+The operator can select the feedback metric.
+
+Available metrics include:
+
+### Peak force
+
+**Unit:** MVC
+
+### Adaptive RFD
+
+For Fixed Early Slope trials, this is the actual slope calculated over that trial's adaptive onset-to-window interval.
+
+**Unit:** MVC/s
+
+### RFD 0–80 ms
+
+A reporting RFD calculated from movement onset to 80 ms.
+
+**Unit:** MVC/s
+
+### Reaction time
+
+**Unit:** ms
+
+### Target error
+
+**Unit:** MVC
+
+The plot explicitly displays the x- and y-axis units.
+
+The feedback panel also indicates whether the most recent performance improved or worsened relative to the previous valid trial.
+
+---
+
+# **Key values**
+
+| Parameter | Default |
+|---|---:|
+| Sampling rate | 500 Hz |
+| Display rate | 64 FPS |
+| Smoothing | 3 samples (~6 ms) |
+| Onset threshold | 0.05 MVC |
+| Onset confirmation | 5 samples |
+| Onset search window | 850 ms after GO |
+| Adaptive history | Previous 3 trials |
+| RFD / force margin | ±10% |
+| Sliding RFD window | 20 ms |
+| First Sliding checkpoint | 20 ms after onset |
+| Sliding checkpoint spacing | 6 ms |
+| Maximum Sliding checking window | 180 ms |
+| Ballistic peak search | 350 ms |
+| Ballistic direction confirmation | 8 ms |
+| Minimum ballistic peak | 0.15 MVC |
+| Fixed timing options | 1/4, 2/4, 3/4 peak latency |
+| Fixed TMS delay | 5 ms default, GUI configurable |
+| Target | 0.85 ± 0.10 MVC |
+| Familiarization trials | 5 default, GUI configurable |
+| Baseline trials | 10 default, GUI configurable |
+| Main Task trials | 15 default, GUI configurable |
+| Feedback history | Up to 30 trials |
+
+---
+
+# **Why movement-onset locking?**
+
+The adaptive clock starts from detected force onset rather than from the visual GO cue.
+
+Reaction time can vary substantially between trials.
+
+If RFD were calculated at a fixed time after the GO cue, the same analysis window could represent very different physiological phases of the contraction.
+
+Movement-onset locking instead allows equivalent portions of the force rise to be compared across trials.
+
+This is particularly important for the Adaptive Fixed Early Slope algorithm because both:
+
+**slope window**
+
+and
+
+**stimulation timing**
+
+are defined relative to the actual beginning of the ballistic contraction.
+
+---
+
+# **Startup GUI**
+
+The startup interface allows the experimenter to configure the task without modifying the source code.
+
+Configurable parameters include:
+
+- participant / session / block identifiers;
+- number of familiarization trials;
+- number of baseline trials;
+- number of Main Task trials;
+- target force level;
+- target tolerance / box height;
+- PREP, GO and pause durations;
+- timing jitter;
+- Sliding vs Fixed Early Slope algorithm;
+- FIT 1/4, FIT 2/4 or FIT 3/4 timing;
+- TMS delay after the Fixed slope fit;
+- BELOW vs ABOVE triggering;
+- RFD_ONLY, FORCE_ONLY or COMBINED stimulation;
+- red cue on/off;
+- participant feedback on/off;
+- feedback metric;
+- baseline QC auto-save vs interactive review;
+- Main Task loadbar.
+
+The interface uses a wide two-column layout so it is better suited to a secondary monitor with substantial horizontal width but limited vertical height.
+
+---
+
+# **Main Python dependencies**
+
+NumPy • Pandas • SciPy • Pygame • Matplotlib • NI-DAQmx
+
+NI-DAQmx is optional when running the task without the stimulation/DAQ hardware.
+
+---
+
+# **Output Results and Figures**
+
+## *Short guide to the files, metrics, and plots generated after each block*
+
+After a Main Task block, the program performs post-hoc processing and saves the results inside a:
+
+**participant / session / block / task-version**
+
+folder.
+
+Outputs include:
+
+- Excel workbook;
+- MATLAB `.mat` file;
+- individual-trial figures;
+- session-level summary figures;
+- baseline quality-control reports;
+- raw and processed force information.
+
+---
+
+# **Excel workbook**
+
+The Excel workbook provides trial-level, time-series, calibration, baseline, and raw-data outputs for subsequent analysis.
+
+### Trial_Summary
+
+One row per trial.
+
+Contains trial-level information including:
+
+- movement onset;
+- reaction time;
+- peak force;
+- RFD metrics;
+- adaptive Fixed Early Slope;
+- checkpoint RFD values;
+- checkpoint force values;
+- adaptive references;
+- trigger decision;
+- actual stimulation timing;
+- target-performance metrics;
+- algorithm and timing information.
+
+### Trial_TimeSeries
+
+Sample-by-sample trial data used for detailed visualization and custom analysis.
+
+Includes force, smoothed force and timing information relative to the GO cue and movement onset.
+
+### Calibration
+
+Contains participant/device calibration values and relevant task configuration.
+
+### Baseline outputs
+
+Baseline results contain the measurements used to initialize the adaptive task, including:
+
+- included/rejected trial information;
+- ballistic onset-to-peak latency;
+- adaptive checking information;
+- RFD reference profiles;
+- force reference profiles;
+- Fixed Early Slope calibration information.
+
+### Raw_Data
+
+Continuous recorded time and right-hand force for the block.
+
+---
+
+# **Baseline QC reports**
+
+Baseline quality-control results are additionally saved to a dedicated report folder.
+
+The report contains trial-by-trial QC plots and summary metrics.
+
+In interactive mode, these outputs reflect the experimenter's final include/reject decisions.
+
+Baseline plots display force on a common:
+
+**0–1 MVC y-axis**
+
+so contractions can be compared visually without changes in axis scaling.
+
+---
+
+# **MATLAB output**
+
+A matching `.mat` file is generated for MATLAB-based analysis.
+
+It contains the recorded force/time arrays, calibration information, adaptive settings, baseline information and trial-level results.
+
+This provides a direct route for custom signal processing and statistical analysis outside Python.
+
+---
+
+# **Individual trial figures**
+
+A publication-style PNG is generated for every completed Main Task trial in the `SingleTrials` folder.
+
+The exact RFD representation depends on the algorithm used.
+
+## Sliding RFD trials
+
+The RFD panel shows the continuous/local 20-ms Sliding RFD trace together with checkpoint values and adaptive threshold information.
+
+## Fixed Early Slope trials
+
+The figure instead represents the actual:
+
+**movement onset → adaptive endpoint**
+
+linear fit.
+
+The adaptive slope reference and decision threshold correspond to this Fixed fit rather than to a Sliding checkpoint threshold.
+
+The adaptive fit endpoint and actual stimulation timing are displayed when applicable.
+
+This prevents Fixed Early Slope trials from being visually misinterpreted as Sliding RFD trials.
+
+---
+
+# **Main session-level figures**
+
+The `Summary` folder provides plots for understanding behavior across the complete block.
+
+### Mean_RFD_Profile.png
+
+Summarizes the average onset-relative RFD behavior across the session.
+
+### RFD_Spaghetti.png
+
+Displays trial-to-trial RFD trajectories and variability.
+
+### RFD_Heatmap.png
+
+Trials × onset-relative time/checkpoint representation of RFD.
+
+Triggered trials are marked with stars.
+
+For Fixed Early Slope trials, trigger markers use the **actual recorded stimulation latency**, allowing triggers that occur between the legacy Sliding checkpoint columns to be displayed correctly.
+
+### Force_Heatmap.png
+
+Equivalent heatmap representation for force.
+
+Trigger markers likewise use the actual stimulation timing.
+
+### Trigger_Map.png
+
+Displays the **actual TMS latency from movement onset** for triggered trials.
+
+It is therefore not restricted to the Sliding checkpoint grid.
+
+### Threshold_Evolution.png
+
+The representation depends on the selected RFD algorithm.
+
+For Sliding RFD, it shows checkpoint-specific adaptive thresholds across trials.
+
+For Fixed Early Slope, it shows the rolling Fixed slope reference and corresponding BELOW/ABOVE decision threshold.
+
+### Force summary figures
+
+Equivalent session-level summaries describe force behavior and adaptive force references.
+
+### Combined RFD–Force figures
+
+Additional figures jointly visualize the RFD and force components used by COMBINED triggering.
+
+### RFD_Force_Normalized_Overview.png
+
+Displays RFD and force relative to their adaptive references.
+
+For Fixed trials, the RFD quantity is the adaptive Fixed Early Slope rather than a legacy Sliding/checkpoint RFD value.
+
+Confirmed stimulation trials are marked even when a legacy reporting quantity is unavailable.
+
+---
+
+# **Additional overview figures**
+
+### Trial_RFD.png
+
+Provides trial-by-trial RFD information.
+
+The task retains the conventional onset-to-80-ms RFD as a reporting metric, while the adaptive Fixed Early Slope is stored separately.
+
+These quantities should not be interpreted as the same metric.
+
+### Onset_Aligned_Forces.png
+
+Overlays smoothed force trajectories after shifting every trial so:
+
+**detected movement onset = 0**
+
+This allows the shape and timing of the ballistic force rise to be compared independently of reaction-time differences.
+
+---
+
+# **How to interpret the outputs**
+
+- Use **Trial_Summary** to determine exactly why and when stimulation occurred.
+
+- Use **Trial_TimeSeries** when the complete shape of a force trajectory is required.
+
+- Use **SingleTrials** for visual quality control of onset detection, ballistic force development, adaptive slope/RFD behavior, threshold crossing and stimulation timing.
+
+- Use the **baseline QC report** to verify the trials used to initialize the adaptive algorithms.
+
+- Use **RFD_Heatmap**, **Force_Heatmap** and **Trigger_Map** to examine where stimulation occurred across trials and onset-relative time.
+
+- Use **Threshold_Evolution** to verify that the adaptive reference changes as new trials enter the rolling history.
+
+- When using **Fixed Early Slope**, interpret the adaptive Fixed slope rather than the conventional 80-ms RFD as the real-time RFD decision variable.
+
+- When using **COMBINED** stimulation, inspect both the RFD/slope and force components because satisfying only one criterion is insufficient to trigger.
+
+- Use **actual onset-relative trigger time** when interpreting Fixed Early Slope stimulation rather than assuming stimulation occurred on the Sliding RFD checkpoint grid.
+
+---
+
+# **Output folder structure**
 
 ADAPT_BK/
 
 └── Subject/
 
     └── Session/
-    
+
         └── Block/
-        
+
             └── TaskVersion/
-            
+
                 ├── game_output_....xlsx
-                
+
                 ├── game_output_....mat
-                
+
                 ├── Trial_RFD.png
-                
+
                 ├── Onset_Aligned_Forces.png
-                
+
+                ├── RFD_Force_Normalized_Overview.png
+
                 ├── SingleTrials/
-                
+
                 │   └── trial_001_....png
-                
+
                 └── Summary/
-                
+
                     ├── Mean_RFD_Profile.png
-                    
+
                     ├── RFD_Spaghetti.png
-                    
+
                     ├── RFD_Heatmap.png
-                    
+
+                    ├── Force_Heatmap.png
+
                     ├── Trigger_Map.png
-                    
+
                     ├── Threshold_Evolution.png
-                    
+
                     └── Force / combined summary figures
-                    
 
-
-
-
-
+Baseline quality-control reports are additionally saved during the baseline phase.
