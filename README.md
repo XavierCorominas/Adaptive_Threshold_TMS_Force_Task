@@ -13,7 +13,6 @@ Two alternative RFD triggering algorithms are available:
 
 For either algorithm, stimulation can be based on **RFD**, **force**, or a **combination of both**.
 
-<img width="1020" height="279" alt="image" src="https://github.com/user-attachments/assets/d3b70ec3-835e-47f4-be1c-00a0e674ef6f" />
 
 ---
 
